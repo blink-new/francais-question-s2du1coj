@@ -7,20 +7,25 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import TrainingCalendar from "./components/TrainingCalendar";
 
+interface WeeklyPlan {
+  weekNumber: number;
+  sessions: string[];
+}
+
 function App() {
   const [genre, setGenre] = useState<string | undefined>(undefined);
   const [age, setAge] = useState<string>("");
   const [taille, setTaille] = useState<string>("");
   const [poids, setPoids] = useState<string>("");
   const [objectifTemps, setObjectifTemps] = useState<string>("");
-  const [generatedPlan, setGeneratedPlan] = useState<string[] | null>(null);
+  const [generatedPlan, setGeneratedPlan] = useState<WeeklyPlan[] | null>(null);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     console.log({ genre, age, taille, poids, objectifTemps });
 
-    // Logique de génération de plan simplifiée améliorée
-    const plan: string[] = [];
+    // Logique de génération de plan améliorée avec structure d'objet
+    const plan: WeeklyPlan[] = [];
     const ageNum = parseInt(age);
     const tailleNum = parseInt(taille);
     const poidsNum = parseInt(poids);
@@ -31,28 +36,31 @@ function App() {
     const imc = tailleNum > 0 ? poidsNum / ((tailleNum / 100) * (tailleNum / 100)) : 0;
 
     for (let i = 0; i < 16; i++) {
-      let weeklyTraining = `Semaine ${i + 1}:\n`;
+      const sessions: string[] = [];
 
       // Base du plan (varie avec l'objectif)
       if (objectifTotalSeconds < 3.5 * 3600) { // Moins de 3h30
-        weeklyTraining += "- 2x VMA Courte\n- 1x Sortie Longue Rapide\n";
+        sessions.push("2x VMA Courte");
+        sessions.push("1x Sortie Longue Rapide");
       } else if (objectifTotalSeconds < 4 * 3600) { // Moins de 4h
-        weeklyTraining += "- 1x Seuil\n- 1x Sortie Longue\n";
+        sessions.push("1x Seuil");
+        sessions.push("1x Sortie Longue");
       } else {
-        weeklyTraining += "- 2x Course Facile\n- 1x Sortie Longue Modérée\n";
+        sessions.push("2x Course Facile");
+        sessions.push("1x Sortie Longue Modérée");
       }
 
       // Ajouts basés sur l'âge et l'IMC
       if (ageNum < 40 && imc < 25) {
-        weeklyTraining += "- 1x Fractionné en Côte\n";
+        sessions.push("1x Fractionné en Côte");
       } else if (ageNum >= 40 || imc >= 25) {
-        weeklyTraining += "- 1x Renforcement Musculaire\n";
+        sessions.push("1x Renforcement Musculaire");
       }
 
       // Repos (toujours inclus)
-      weeklyTraining += "- 1-2 jours de Repos";
+      sessions.push("1-2 jours de Repos");
 
-      plan.push(weeklyTraining);
+      plan.push({ weekNumber: i + 1, sessions });
     }
     setGeneratedPlan(plan);
   };
