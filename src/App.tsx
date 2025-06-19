@@ -19,12 +19,62 @@ function App() {
   const [poids, setPoids] = useState<string>("");
   const [objectifTemps, setObjectifTemps] = useState<string>("");
   const [generatedPlan, setGeneratedPlan] = useState<WeeklyPlan[] | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [selectedWeek, setSelectedWeek] = useState<number | null>(null);
+
+  // Validation errors state
+  const [genreError, setGenreError] = useState<string | null>(null);
+  const [ageError, setAgeError] = useState<string | null>(null);
+  const [tailleError, setTailleError] = useState<string | null>(null);
+  const [poidsError, setPoidsError] = useState<string | null>(null);
+  const [objectifTempsError, setObjectifTempsError] = useState<string | null>(null);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    setIsLoading(true);
+    setGeneratedPlan(null); // Clear previous plan
+    setSelectedWeek(null); // Clear selected week
+
+    // Reset errors
+    setGenreError(null);
+    setAgeError(null);
+    setTailleError(null);
+    setPoidsError(null);
+    setObjectifTempsError(null);
+
+    let isValid = true;
+
+    if (!genre) {
+      setGenreError("Veuillez sélectionner votre genre.");
+      isValid = false;
+    }
+    if (!age || parseInt(age) <= 0) {
+      setAgeError("Veuillez entrer un âge valide.");
+      isValid = false;
+    }
+    if (!taille || parseInt(taille) <= 0) {
+      setTailleError("Veuillez entrer une taille valide.");
+      isValid = false;
+    }
+    if (!poids || parseFloat(poids) <= 0) {
+      setPoidsError("Veuillez entrer un poids valide.");
+      isValid = false;
+    }
+    // Simple regex for hh:mm:ss format
+    const timeRegex = /^\d{2}:\d{2}:\d{2}$/;
+    if (!objectifTemps || !timeRegex.test(objectifTemps)) {
+      setObjectifTempsError("Format hh:mm:ss requis (ex: 03:30:00).");
+      isValid = false;
+    }
+
+    if (!isValid) {
+      setIsLoading(false);
+      return;
+    }
+
     console.log({ genre, age, taille, poids, objectifTemps });
 
-    // Logique de génération de plan améliorée avec structure d'objet
+    // Logique de génération de plan améliorée avec progression et variation
     const plan: WeeklyPlan[] = [];
     const ageNum = parseInt(age);
     const tailleNum = parseInt(taille);
@@ -37,32 +87,55 @@ function App() {
 
     for (let i = 0; i < 16; i++) {
       const sessions: string[] = [];
+      const week = i + 1;
 
-      // Base du plan (varie avec l'objectif)
-      if (objectifTotalSeconds < 3.5 * 3600) { // Moins de 3h30
-        sessions.push("2x VMA Courte");
-        sessions.push("1x Sortie Longue Rapide");
-      } else if (objectifTotalSeconds < 4 * 3600) { // Moins de 4h
-        sessions.push("1x Seuil");
-        sessions.push("1x Sortie Longue");
-      } else {
-        sessions.push("2x Course Facile");
-        sessions.push("1x Sortie Longue Modérée");
+      // Base sessions (adjust based on week progression)
+      if (week <= 4) { // Foundation
+        sessions.push("Course Facile (30-40 min)");
+        sessions.push("Sortie Longue (45-60 min)");
+      } else if (week <= 8) { // Building endurance and speed
+        sessions.push("Course Facile (40-50 min)");
+        sessions.push("Séance de Fractionné (ex: 6x800m)");
+        sessions.push(`Sortie Longue (${60 + (week - 4) * 15} min)`); // Increase long run
+      } else if (week <= 12) { // Peak training
+        sessions.push("Course Facile (30-40 min)");
+        sessions.push("Séance de Seuil ou Allure Spécifique");
+        sessions.push(`Sortie Très Longue (${120 + (week - 8) * 15} min)`); // Longest runs
+      } else if (week <= 14) { // Tapering
+        sessions.push("Course Facile (20-30 min)");
+        sessions.push("Séance Courte Allure Marathon");
+        sessions.push(`Sortie Longue Réduite (${90 - (week - 12) * 15} min)`); // Decrease long run
+      } else { // Race week
+        sessions.push("Course très Facile (20 min)");
+        sessions.push("Repos Complet");
+        sessions.push("Repos Complet");
+        sessions.push("Marathon!");
       }
 
-      // Ajouts basés sur l'âge et l'IMC
-      if (ageNum < 40 && imc < 25) {
-        sessions.push("1x Fractionné en Côte");
-      } else if (ageNum >= 40 || imc >= 25) {
-        sessions.push("1x Renforcement Musculaire");
+      // Add strength/cross-training based on user data
+      if (ageNum > 45 || imc >= 26) {
+         if (week <= 14) sessions.push("Renforcement Musculaire Léger");
+      } else if (ageNum < 30 && imc < 22) {
+         if (week <= 12) sessions.push("Séance de Côtes ou PPG");
       }
 
-      // Repos (toujours inclus)
-      sessions.push("1-2 jours de Repos");
+      // Ensure at least one rest day (simplified)
+      if (!sessions.some(s => s.includes('Repos'))) {
+          sessions.push("Repos");
+      }
 
-      plan.push({ weekNumber: i + 1, sessions });
+      plan.push({ weekNumber: week, sessions });
     }
-    setGeneratedPlan(plan);
+    
+    // Simulate loading time
+    setTimeout(() => {
+        setGeneratedPlan(plan);
+        setIsLoading(false);
+    }, 1000); // 1 second delay
+  };
+
+  const handleWeekSelect = (weekNumber: number | null) => {
+    setSelectedWeek(weekNumber);
   };
 
   return (
@@ -90,6 +163,7 @@ function App() {
                     <SelectItem value="autre">Autre</SelectItem>
                   </SelectContent>
                 </Select>
+                {genreError && <p className="text-red-500 text-sm mt-1">{genreError}</p>}
               </div>
               <div>
                 <Label htmlFor="age" className="text-base font-semibold text-gray-700">Âge (années)</Label>
@@ -99,9 +173,10 @@ function App() {
                   value={age} 
                   onChange={(e) => setAge(e.target.value)} 
                   placeholder="Ex: 30" 
-                  className="mt-1 bg-white border-gray-300 focus:border-primary focus:ring-primary"
+                  className={`mt-1 bg-white border-gray-300 focus:border-primary focus:ring-primary ${ageError ? 'border-red-500' : ''}`}
                   required
                 />
+                {ageError && <p className="text-red-500 text-sm mt-1">{ageError}</p>}
               </div>
             </div>
 
@@ -114,9 +189,10 @@ function App() {
                   value={taille} 
                   onChange={(e) => setTaille(e.target.value)} 
                   placeholder="Ex: 175"
-                  className="mt-1 bg-white border-gray-300 focus:border-primary focus:ring-primary"
+                  className={`mt-1 bg-white border-gray-300 focus:border-primary focus:ring-primary ${tailleError ? 'border-red-500' : ''}`}
                   required
                 />
+                {tailleError && <p className="text-red-500 text-sm mt-1">{tailleError}</p>}
               </div>
               <div>
                 <Label htmlFor="poids" className="text-base font-semibold text-gray-700">Poids (kg)</Label>
@@ -126,9 +202,10 @@ function App() {
                   value={poids} 
                   onChange={(e) => setPoids(e.target.value)} 
                   placeholder="Ex: 70"
-                  className="mt-1 bg-white border-gray-300 focus:border-primary focus:ring-primary"
+                  className={`mt-1 bg-white border-gray-300 focus:border-primary focus:ring-primary ${poidsError ? 'border-red-500' : ''}`}
                   required
                 />
+                {poidsError && <p className="text-red-500 text-sm mt-1">{poidsError}</p>}
               </div>
             </div>
             
@@ -140,13 +217,14 @@ function App() {
                 value={objectifTemps} 
                 onChange={(e) => setObjectifTemps(e.target.value)} 
                 placeholder="Ex: 03:30:00"
-                className="mt-1 bg-white border-gray-300 focus:border-primary focus:ring-primary"
+                className={`mt-1 bg-white border-gray-300 focus:border-primary focus:ring-primary ${objectifTempsError ? 'border-red-500' : ''}`}
                 required
               />
+              {objectifTempsError && <p className="text-red-500 text-sm mt-1">{objectifTempsError}</p>}
             </div>
 
-            <Button type="submit" className="w-full bg-accent hover:bg-accent/90 text-white font-bold py-3 text-lg rounded-lg transition-transform transform hover:scale-105">
-              Générer mon Plan
+            <Button type="submit" className="w-full bg-accent hover:bg-accent/90 text-white font-bold py-3 text-lg rounded-lg transition-transform transform hover:scale-105" disabled={isLoading}>
+              {isLoading ? 'Génération...' : 'Générer mon Plan'}
             </Button>
           </form>
         </CardContent>
@@ -159,7 +237,7 @@ function App() {
 
       <div className="w-full max-w-4xl mt-12 bg-white/90 backdrop-blur-sm p-8 rounded-lg shadow-xl">
         <h2 className="text-3xl font-bold text-primary mb-6 text-center">Votre Calendrier d'Entraînement</h2>
-        <TrainingCalendar plan={generatedPlan} />
+        <TrainingCalendar plan={generatedPlan} selectedWeek={selectedWeek} onWeekSelect={handleWeekSelect} />
       </div>
     </div>
   );
