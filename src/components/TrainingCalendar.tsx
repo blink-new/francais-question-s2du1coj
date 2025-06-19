@@ -28,7 +28,11 @@ export default function TrainingCalendar({ plan }: TrainingCalendarProps) {
             title={trainingPlan[week - 1]}
           >
             <h3 className="font-semibold text-primary mb-2">Semaine {week}</h3>
-            <p className="text-sm text-primary/80">{trainingPlan[week - 1]?.split(': ')[1] || ''}</p>
+            <div className="text-sm text-primary/80 whitespace-pre-wrap">
+              {trainingPlan[week - 1]?.split('\n').slice(1).map((item, index) => (
+                <p key={index}>{item}</p>
+              ))}
+            </div>
           </div>
         ))}
       </div>

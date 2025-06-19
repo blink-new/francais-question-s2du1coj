@@ -19,7 +19,7 @@ function App() {
     e.preventDefault();
     console.log({ genre, age, taille, poids, objectifTemps });
 
-    // Logique de génération de plan simplifiée utilisant les inputs
+    // Logique de génération de plan simplifiée améliorée
     const plan: string[] = [];
     const ageNum = parseInt(age);
     const tailleNum = parseInt(taille);
@@ -31,39 +31,26 @@ function App() {
     const imc = tailleNum > 0 ? poidsNum / ((tailleNum / 100) * (tailleNum / 100)) : 0;
 
     for (let i = 0; i < 16; i++) {
-      let weeklyTraining = `Semaine ${i + 1}: `;
+      let weeklyTraining = `Semaine ${i + 1}:\n`;
 
-      // Variation basée sur l'objectif de temps
+      // Base du plan (varie avec l'objectif)
       if (objectifTotalSeconds < 3.5 * 3600) { // Moins de 3h30
-        weeklyTraining += "Séance de VMA + ";
+        weeklyTraining += "- 2x VMA Courte\n- 1x Sortie Longue Rapide\n";
       } else if (objectifTotalSeconds < 4 * 3600) { // Moins de 4h
-        weeklyTraining += "Séance de Seuil + ";
+        weeklyTraining += "- 1x Seuil\n- 1x Sortie Longue\n";
       } else {
-        weeklyTraining += "Course Facile + ";
+        weeklyTraining += "- 2x Course Facile\n- 1x Sortie Longue Modérée\n";
       }
 
-      // Variation basée sur l'âge
-      if (ageNum < 30) {
-        weeklyTraining += "Fractionné Court + ";
-      } else if (ageNum < 50) {
-        weeklyTraining += "Sortie Longue + ";
-      } else {
-        weeklyTraining += "Renforcement Musculaire + ";
+      // Ajouts basés sur l'âge et l'IMC
+      if (ageNum < 40 && imc < 25) {
+        weeklyTraining += "- 1x Fractionné en Côte\n";
+      } else if (ageNum >= 40 || imc >= 25) {
+        weeklyTraining += "- 1x Renforcement Musculaire\n";
       }
 
-      // Variation basée sur l'IMC
-      if (imc < 22) {
-        weeklyTraining += "Côtes";
-      } else if (imc < 26) {
-        weeklyTraining += "Allure Spécifique";
-      } else {
-        weeklyTraining += "Marche/Course";
-      }
-      
-      // Ajouter un jour de repos aléatoire pour l'exemple
-      if (Math.random() > 0.7) {
-          weeklyTraining += " + Repos";
-      }
+      // Repos (toujours inclus)
+      weeklyTraining += "- 1-2 jours de Repos";
 
       plan.push(weeklyTraining);
     }
