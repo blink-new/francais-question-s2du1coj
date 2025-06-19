@@ -49,9 +49,9 @@ export default function TrainingCalendar({ plan, selectedWeek, onWeekSelect }: T
       </div>
 
       {selectedWeekPlan && (
-        <div className="mt-8 p-6 bg-white/90 backdrop-blur-sm rounded-lg shadow-xl">
-          <h3 className="text-2xl font-bold text-primary mb-4">Détails de la Semaine {selectedWeekPlan.weekNumber}</h3>
-          <ul className="list-disc list-inside space-y-2 text-gray-700">
+        <div className="mt-8 p-8 bg-white/95 backdrop-blur-md rounded-lg shadow-2xl animate-fade-in">
+          <h3 className="text-2xl font-bold text-primary mb-6 border-b pb-2 border-primary/20">Détails de la Semaine {selectedWeekPlan.weekNumber}</h3>
+          <ul className="list-disc list-inside space-y-3 text-gray-800 text-base">
             {selectedWeekPlan.sessions.map((session, index) => (
               <li key={index}>{session}</li>
             ))}

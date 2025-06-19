@@ -85,38 +85,49 @@ function App() {
     // Calcul IMC simple (pour l'exemple)
     const imc = tailleNum > 0 ? poidsNum / ((tailleNum / 100) * (tailleNum / 100)) : 0;
 
+    // Helper to simulate pace based on objective and week
+    const simulatePace = (basePace: number, week: number, objectiveSeconds: number) => {
+        // Simple simulation: faster objective = faster pace, later weeks = slightly faster pace
+        const paceAdjustment = (4 * 3600 - objectiveSeconds) / 1000; // Faster for lower objective
+        const weekAdjustment = week * 0.5; // Slightly faster in later weeks
+        const adjustedPace = basePace - paceAdjustment - weekAdjustment;
+        const minutes = Math.floor(adjustedPace);
+        const seconds = Math.round((adjustedPace - minutes) * 60);
+        return `${minutes}'${seconds.toString().padStart(2, '0')}"/km`;
+    };
+
     for (let i = 0; i < 16; i++) {
       const sessions: string[] = [];
       const week = i + 1;
 
       // Base sessions (adjust based on week progression)
       if (week <= 4) { // Foundation
-        sessions.push("Course Facile (30-40 min)");
-        sessions.push("Sortie Longue (45-60 min)");
+        sessions.push("Course Facile (30-40 min)\n- Échauffement: 10 min course très lente\n- Corps: 20-30 min course facile\n- Retour au calme: 5 min marche");
+        sessions.push("Sortie Longue (45-60 min)\n- Échauffement: 10 min course lente\n- Corps: 35-50 min course facile\n- Retour au calme: 5 min marche");
       } else if (week <= 8) { // Building endurance and speed
-        sessions.push("Course Facile (40-50 min)");
-        sessions.push("Séance de Fractionné (ex: 6x800m)");
-        sessions.push(`Sortie Longue (${60 + (week - 4) * 15} min)`); // Increase long run
+        sessions.push("Course Facile (40-50 min)\n- Échauffement: 10 min\n- Corps: 30-40 min facile\n- Retour au calme: 5 min");
+        sessions.push(`Séance de Fractionné (ex: 6x800m à ${simulatePace(4.30, week, objectifTotalSeconds)})\n- Échauffement: 15 min facile + gammes\n- Corps: 6x800m avec 2 min récup trot\n- Retour au calme: 10 min facile`);
+        sessions.push(`Sortie Longue (${60 + (week - 4) * 15} min)\n- Échauffement: 10 min\n- Corps: ${50 + (week - 4) * 15} min facile\n- Retour au calme: 5 min`); // Increase long run
       } else if (week <= 12) { // Peak training
-        sessions.push("Course Facile (30-40 min)");
-        sessions.push("Séance de Seuil ou Allure Spécifique");
-        sessions.push(`Sortie Très Longue (${120 + (week - 8) * 15} min)`); // Longest runs
+        sessions.push("Course Facile (30-40 min)\n- Échauffement: 10 min\n- Corps: 20-30 min facile\n- Retour au calme: 5 min");
+        sessions.push(`Séance de Seuil ou Allure Spécifique (${simulatePace(4.00, week, objectifTotalSeconds)})\n- Échauffement: 15 min facile\n- Corps: 20-30 min à allure spécifique\n- Retour au calme: 10 min facile`);
+        sessions.push(`Sortie Très Longue (${120 + (week - 8) * 15} min)\n- Échauffement: 10 min\n- Corps: ${110 + (week - 8) * 15} min facile\n- Retour au calme: 5 min`); // Longest runs
       } else if (week <= 14) { // Tapering
-        sessions.push("Course Facile (20-30 min)");
-        sessions.push("Séance Courte Allure Marathon");
-        sessions.push(`Sortie Longue Réduite (${90 - (week - 12) * 15} min)`); // Decrease long run
+        sessions.push("Course Facile (20-30 min)\n- Échauffement: 5 min\n- Corps: 15-25 min facile\n- Retour au calme: 5 min");
+        sessions.push(`Séance Courte Allure Marathon (${simulatePace(3.50, week, objectifTotalSeconds)})\n- Échauffement: 10 min\n- Corps: 10-15 min à allure marathon\n- Retour au calme: 5 min`);
+        sessions.push(`Sortie Longue Réduite (${90 - (week - 12) * 15} min)\n- Échauffement: 10 min\n- Corps: ${80 - (week - 12) * 15} min facile\n- Retour au calme: 5 min`); // Decrease long run
       } else { // Race week
-        sessions.push("Course très Facile (20 min)");
+        sessions.push("Course très Facile (20 min)\n- Juste pour dérouler les jambes");
         sessions.push("Repos Complet");
         sessions.push("Repos Complet");
-        sessions.push("Marathon!");
+        sessions.push("Marathon!\n- Bonne chance !");
       }
 
       // Add strength/cross-training based on user data
       if (ageNum > 45 || imc >= 26) {
-         if (week <= 14) sessions.push("Renforcement Musculaire Léger");
+         if (week <= 14) sessions.push("Renforcement Musculaire Léger\n- Exercices au poids du corps");
       } else if (ageNum < 30 && imc < 22) {
-         if (week <= 12) sessions.push("Séance de Côtes ou PPG");
+         if (week <= 12) sessions.push("Séance de Côtes ou PPG\n- Échauffement + 8-10x côtes courtes\n- ou Préparation Physique Générale");
       }
 
       // Ensure at least one rest day (simplified)
