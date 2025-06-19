@@ -17,20 +17,55 @@ function App() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // Pour l'instant, on affiche juste les données dans la console
     console.log({ genre, age, taille, poids, objectifTemps });
 
-    // Logique de génération de plan très simple (placeholder)
+    // Logique de génération de plan simplifiée utilisant les inputs
     const plan: string[] = [];
+    const ageNum = parseInt(age);
+    const tailleNum = parseInt(taille);
+    const poidsNum = parseInt(poids);
+    const objectifParts = objectifTemps.split(':').map(Number);
+    const objectifTotalSeconds = objectifParts[0] * 3600 + objectifParts[1] * 60 + objectifParts[2];
+
+    // Calcul IMC simple (pour l'exemple)
+    const imc = tailleNum > 0 ? poidsNum / ((tailleNum / 100) * (tailleNum / 100)) : 0;
+
     for (let i = 0; i < 16; i++) {
-      // Une logique simplifiée basée sur l'objectif de temps par exemple
-      if (objectifTemps.startsWith('03:')) {
-        plan.push(`Semaine ${i + 1}: Course Longue`);
-      } else if (objectifTemps.startsWith('04:')) {
-        plan.push(`Semaine ${i + 1}: Course Modérée`);
+      let weeklyTraining = `Semaine ${i + 1}: `;
+
+      // Variation basée sur l'objectif de temps
+      if (objectifTotalSeconds < 3.5 * 3600) { // Moins de 3h30
+        weeklyTraining += "Séance de VMA + ";
+      } else if (objectifTotalSeconds < 4 * 3600) { // Moins de 4h
+        weeklyTraining += "Séance de Seuil + ";
       } else {
-        plan.push(`Semaine ${i + 1}: Entraînement`);
+        weeklyTraining += "Course Facile + ";
       }
+
+      // Variation basée sur l'âge
+      if (ageNum < 30) {
+        weeklyTraining += "Fractionné Court + ";
+      } else if (ageNum < 50) {
+        weeklyTraining += "Sortie Longue + ";
+      } else {
+        weeklyTraining += "Renforcement Musculaire + ";
+      }
+
+      // Variation basée sur l'IMC
+      if (imc < 22) {
+        weeklyTraining += "Côtes";
+      } else if (imc < 26) {
+        weeklyTraining += "Allure Spécifique";
+      } else {
+        weeklyTraining += "Marche/Course";
+      }
+      
+      // Ajouter un jour de repos aléatoire pour l'exemple
+      if (Math.random() > 0.7) {
+          weeklyTraining += " + Repos";
+      }
+
+      plan.push(weeklyTraining);
     }
     setGeneratedPlan(plan);
   };
